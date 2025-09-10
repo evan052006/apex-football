@@ -261,5 +261,30 @@ PRODUCTION=True
 SCHEMA=tugas_individu
 ```
 
+## Bagan Django
+![bagan](bagan.jpeg)
+
+Hubungan pertama dimulai saat pengguna request konek pada web app kita. request ini akan melalui internet yakni pertama melewati modem. Setelah request tiba pada server, pertama akan dirouting melewati urls.py yang berada pada project level, lalu di arahkan lagi pada aplikasi. Setelah tiba di urls.py dalam aplikasi, akan diterima oleh berbagai view tergantung urlnya. View dapat berupa fungsi maupun class, namun fungsinya tetep sama yaitu menerima request HTML, lalu mengembalikan response (yang berupa HTML) berdasarkan request tersebut. views.py juga berinteraksi dengan models.py yang merupakan abstraksi atas operasi DB yang lebih rendah (seperti postgresql, sqlite3, dll). Interaksi model dan database saling request dan response, untuk update atau query DB pada server. Setelah views selesai menjalankan programnya, akan menghasilkan hasil response html yang umumnya merupakan template HTML dimana hanya beberapa nilai yang sebenarnya berubah. Akhirnya response HTML ini akan dikembalikan pada user melalui internet, lalu siklusnya berulang lagi.
+
+## Peran settings.py
+Secara umum settings.py berfungsi untuk menyimpan konfigurasi projek yang global, berikut beberapa penjelasan variabel pada settings.py.
+
+- BASE_DIR : Path ke direktori akar dari projek
+- DEBUG : Jika true, umumnya menampilkan log error yang berguna untuk development. Namun untuk Production sebaiknya dinonaktifkan karena dapat membuat celah keamanan.
+- ALLOWED_HOSTS : Daftar alamat host yang melayani projek django tersebut. Saat debug adalah true dan ini kosong, django akan otomatis mengisi alamat lokal host.
+- INSTALLED_APPS : Daftar aplikasi yang aktif dalam django project. Juga berisi aplikasi builtin django seperti admin.
+- DATABASES : konfigurasi database suatu projek. Menggunakan sqlite3 secara default.
+- STATIC_ROOT : Path ke direktori yang berisi file - file yang bersifat global atau ingin digunakan untuk seluruh projek, seperti gambar, CSS stylesheets, dll.
+- STATIC_URL : URL yang digunakan untuk mengakses file dalam STATIC_ROOT, berfungsi agar organisasi static file lebih mudah.
+
+
+## Cara kerja migrasi DB pada django
+Migrasi database di Django adalah cara Django untuk mempropagasikan perubahan yang dibuat pada model (di models.py) ke dalam skema database. Perintah "makemigrations" akan membuat folder migrations pada BASE_DIR yang berisi perubahan model yang ingin dilakukan pada DB. Folder migrations ini bagaikan folder .git dalam git, yang berfungsi sebagai version control DB secara tidak langsung. Setelah sudah siap, kita jalankan perintah "migrate" yang akan menerapkan perubahan yang kita buat ke DB. Mekanisme ini membuat DB lebih reliable, karena jika kita membuat perubahan tidak sengaja pada models.py, kita dapat lebih mudah mengembalikan perubahan tersebut. 
+
+
+## Mengapa framework Django dijadikan permulaan pembelajaran pengembangan perangkat lunak?
+Menurut saya, salah satu faktor yang kuat adalah penerapannya yang mirip dengan python yakni "batteries included". Hal ini berarti sudah banyak library untuk mengembangkan fungsi yang umum dilakukan, hingga mempercepat web development. Bagi pengguna, library ini memberikan kesempatan untuk mengerti web development secara konsep level tinggi lebih mudah ketimbang mempelajari setiap aspek dari web development terlebih dahulu (seperti DB, front end development, etc)
+
+
 ## Feedback Tutorial 1
 Belum ada feedback, sejauh ini masih lancar mengikuti tutorial :)
