@@ -8,4 +8,10 @@
 <p>{{ nama }}</p> 
 <h3>Kelas: </h3>
 <p>PBP {{ kelas }}</p> 
+
+<a href = {% url 'main:create_product' %}>
+    <button>Add Product</button>
+</a>
+
 {% endblock content %}
+

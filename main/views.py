@@ -1,5 +1,6 @@
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from main.models import Product
+from main.forms import ProductForm
 from django.http import HttpResponse
 from django.core import serializers
 
@@ -32,6 +33,16 @@ def show_product_json_by_id(request, id):
         return HttpResponse(json_data, content_type="application/json")
     except Product.DoesNotExist:
         return HttpResponse(status=404)
+
+
+def create_product(request):
+    form = ProductForm(request.POST or None)
+    if form.is_valid() and request.method == "POST":
+        form.save()
+        return redirect('main:show_index')
+
+    context = {'form': form}
+    return render(request, "create_product.html", context)
 
 
 def show_index(request):
