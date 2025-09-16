@@ -1,4 +1,4 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from main.models import Product
 from main.forms import ProductForm
 from django.http import HttpResponse
@@ -18,21 +18,26 @@ def show_products_by_json(request):
 
 
 def show_product_xml_by_id(request, id):
-    try:
-        product_item = Product.objects.get(id=id)
-        xml_data = serializers.serialize("xml", [product_item])
-        return HttpResponse(xml_data, content_type="application/xml")
-    except Product.DoesNotExist:
-        return HttpResponse(status=404)
+    product_item = get_object_or_404(Product, id=id)
+    xml_data = serializers.serialize("xml", [product_item])
+    return HttpResponse(xml_data, content_type="application/xml")
 
 
 def show_product_json_by_id(request, id):
-    try:
-        product_item = Product.objects.get(id=id)
-        json_data = serializers.serialize("json", [product_item])
-        return HttpResponse(json_data, content_type="application/json")
-    except Product.DoesNotExist:
-        return HttpResponse(status=404)
+    product_item = get_object_or_404(Product, id=id)
+    json_data = serializers.serialize("json", [product_item])
+    return HttpResponse(json_data, content_type="application/json")
+
+
+def show_product(request, id):
+    product = get_object_or_404(Product, id=id)
+    return render(
+        request,
+        "product_detail.html",
+        {
+            "product": product
+        }
+    )
 
 
 def create_product(request):
@@ -46,12 +51,14 @@ def create_product(request):
 
 
 def show_index(request):
+    product_list = Product.objects.all()
     return render(
         request,
         "index.html",
         {
             "nama": "Christopher Evan Tanuwidjaja",
             "kelas": "A",
-            "app_name": "main"
+            "app_name": "main",
+            "product_list": product_list
         }
     )
