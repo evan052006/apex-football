@@ -7,6 +7,12 @@
 </p>
 
 <h1>{{ product.name }}</h1>
+{% if product.requester %}
+    <p>Requester: {{ product.requester.username }}</p>
+{% else %}
+    <p>Requester: Anonymous</p>
+{% endif %}
+
 <p>
     <b>{{ product.get_category_display }}</b>{% if product.is_featured %} | 
     <b>Featured</b>{% endif %}{% if product.is_verified %} | 

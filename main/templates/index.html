@@ -13,6 +13,20 @@
     <button>Add Product</button>
 </a>
 
+<a href="{% url 'main:logout' %}">
+  <button>Logout</button>
+</a>
+
+<h5>Username: {{ user.username }}</h5>
+<h5>Sesi terakhir login: {{ last_login }}</h5>
+
+<a href="?filter=all">
+    <button type="button">All Requests</button>
+</a>
+<a href="?filter=my">
+    <button type="button">My Requests</button>
+</a> 
+
 <hr>
 
 {% if not product_list %}
@@ -22,6 +36,11 @@
 {% for product in product_list %}
 <div>
     <h2><a href="{% url 'main:show_product' product.id %}">{{ product.name }}</a></h2>
+    {% if product.requester %}
+        <p>Requester: {{ product.requester.username }}</p>
+    {% else %}
+        <p>Requester: Anonymous</p>
+    {% endif %}
     <b>{{ product.get_category_display }}</b>{% if product.is_featured %} | 
     <b>Featured</b>{% endif %}{% if product.is_verified %} | 
     <b>Verified</b>{% endif %} | Price: {{ product.price }}</p>

@@ -1,3 +1,4 @@
+import datetime
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
@@ -5,7 +6,8 @@ from django.contrib import messages
 from django.shortcuts import render, redirect, get_object_or_404
 from main.models import Product
 from main.forms import ProductForm
-from django.http import HttpResponse
+from django.http import HttpResponse, HttpResponseRedirect
+from django.urls import reverse
 from django.core import serializers
 
 
@@ -45,10 +47,13 @@ def show_product(request, id):
     )
 
 
+@login_required(login_url='/login')
 def create_product(request):
     form = ProductForm(request.POST or None)
     if form.is_valid() and request.method == "POST":
-        form.save()
+        product_entry = form.save(commit=False)
+        product_entry.requester = request.user
+        product_entry.save()
         return redirect('main:show_index')
 
     context = {'form': form}
@@ -57,7 +62,11 @@ def create_product(request):
 
 @login_required(login_url='/login')
 def show_index(request):
-    product_list = Product.objects.all()
+    filter_type = request.GET.get("filter", "all")
+    if filter_type == "all":
+        product_list = Product.objects.all()
+    else:
+        product_list = Product.objects.filter(requester=request.user)
     return render(
         request,
         "index.html",
@@ -65,7 +74,9 @@ def show_index(request):
             "nama": "Christopher Evan Tanuwidjaja",
             "kelas": "A",
             "app_name": "main",
-            "product_list": product_list
+            "username": request.user.username,
+            "product_list": product_list,
+            "last_login": request.COOKIES.get('last_login', 'Never')
         }
     )
 
@@ -87,6 +98,8 @@ def login_user(request):
         if form.is_valid():
             user = form.get_user()
             login(request, user)
+            response = HttpResponseRedirect(reverse("main:show_index"))
+            response.set_cookie('last_login', str(datetime.datetime.now()))
             return redirect('main:show_index')
     else:
         form = AuthenticationForm(request)
