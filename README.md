@@ -480,3 +480,250 @@ CSRF adalah singkat dari "cross-site request forgery" yakni mereferensi suatu ti
 ![get_json_by_id](json_id_get.png)
 ![get_xml](xml_get.png)
 ![get_xml_by_id](xml_id_get.png)
+
+## Apa itu Django AuthenticationForm, kelebihan dan kekurangan?
+AuthenticationForm dalam Django adalah class yang menurunkan base class Form dengan tujuan sebagai interface yang memudahkan interaksi dan validasi data untuk ditulis ke database ataupun hanya dibaca. AuthenticationForm adalah builtin Form dengan fungsi khusus yakni menerima informasi login dan memeriksa apakah data login tersebut valid (dengan fungsi is_valid()). Class ini jika diinstansiasi pertama perlu data request.POST yang dkirimkan pengguna. 
+
+Kelebihannya adalah lebih mudah digunakan karena Django sudah mengurus banyak hal terkait validasi input serta juga menyimpan template HTML sebagai table sebagai input formnya.
+
+Kekurangannya adalah penggunaan class builtin tersebut cenderung kurang fleksibel, jika diinginkan fitur lain (seperti sistem ban, mungkin fitur remember me, ataupun SSO, etc), maka harus diimplementasikan sendiri dengan membuat form dari awal, atau menurunkan class tersebut. Penggunaan class juga menambahkan sedikit overhead (walaupun sebenarnya tidak besar perbedaan kecepatannya)
+
+[Referensi](https://docs.djangoproject.com/en/5.2/topics/auth/default/)
+
+## Apa perbedaan antara autentikasi dan otorisasi? Bagaiamana Django mengimplementasikan kedua konsep tersebut?
+autentikasi merujuk pada proses verifikasi identitas pengguna. Sedangkan otorisasi adalah proses verifikasi apakah suatu identitas pengguna memiliki hak akses pada suatu hal. 
+
+Django mengimplementasikan autentikasi dengan cara menyediakan berbagai interface (seperti form, dan builtin model untuk user). Sekaligus memberikan builtin dari interface tersebut. Dalam backend Django, hal terkait password user juga tidak disimpan plaintext, namun dengan hashing, sehingga kebocoran database tidak begitu buruk. Merujuk poin sebelumnya, fitur - fitur yang diberikan AuthenticationForm memudahkan implementasi autentikasi bahkan dengan builtin views dan template HTMLnya. Implementasi CSRF token dan cookies yang disediakan Django juga membantu membuat autentikasi yang lebih mudah dan aman.
+
+Django mengimplementasikan otorisasi dengan membuat sistem permission pada user model builtinnya. Sistem user dalam Django mirip dengan linux, dimana permission setiap user dalam dipasang dengan grup, dimana grup tersebut akan memberikan permission yang sesuai pada user tersebut. Permission ini digunakan Django untuk menentukan apakah suatu User memiliki hak melihat objek, menambah objek, menghapus objek, bahkan hingga pengaksesan Form. Jika diperlukan, Django juga mengimplementasikan interface untuk membuat custom permission (Permission juga disimpan sebagai Model dalam Django).
+
+[Referensi](https://docs.djangoproject.com/en/5.2/topics/auth/default/#topic-authorization)
+
+##  Apa saja kelebihan dan kekurangan session dan cookies dalam konteks menyimpan state di aplikasi web?
+
+Kelebihan utama dari cookies adalah menghemat waktu pengguna dengan membuat server tetap menganggap pengguna sudah login dalam suatu kurun waktu. Karena sistem MVT dimana setiap request independent dari satu sama lain, tanpa session dan cookies, pengguna akan harus melakukan login setiap kali ingin melakukan perubahan apapun pada database.
+
+Namun penggunaan cookies tersebut dapat membuka celah terhadap serangan siber, dimana jika suatu penyerang dapat akses terhadap cookies tersebut, maka mereka dapat melakukan aksi bagaikan mereka memiliki akun kamu. Salah satu serangan yang dapat dilakukan adalah CSRF (Cross Site Request Forgery), dimana penyerang menyembunyikan link request yang jika dijalankan pengguna, dapat tidak sengaja menggunakan session mereka untuk melakukan tindakan yang bahaya (seperti reset password atau merubah email). Cookies juga dapat menjadi privacy concern karena beberapa website dapat menyimpan data pengguna tanpa izin, dan cookies dalam suatu situs dapat dilacak dengan situs lain.
+
+##  Apakah penggunaan cookies aman secara default dalam pengembangan web, atau apakah ada risiko potensial yang harus diwaspadai? Bagaimana Django menangani hal tersebut?
+
+Merujuk pada poin sebelumnya, dimana salah satu risiko adalah CSRF, dimana Django menangani risiko tersebut dengan menyimpan CSRF token (yang digunakan untuk request), sehingga penyerang juga membutuhkan token tersebut untuk memaksa pengguna melakukan suatu request. Salah satu risiko keamanan lainnya adalah XSS (cross site scripting), dimana penyerang dapat menjalankan program javascript melalui celah input dalam program (salah satu celah yang penyerang dapat lakukan adalah mencuri session cookie suatu pengguna dengan menjalankan skrip pada server ataupun bisa mengganti session key pada server tersendiri).  
+
+## Mengimplementasikan fungsi registrasi, login, dan logout untuk memungkinkan pengguna mengakses aplikasi sebelumnya sesuai dengan status login/logoutnya
+
+Pertama dibuat views baru berupa login_user, register_user, dan logout.
+
+```
+def register_user(request):
+    form = UserCreationForm(request.POST or None)
+    if request.method == "POST" and form.is_valid():
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Your account has been successfully created!')
+            return redirect('main:login')
+    context = {'form': form}
+    return render(request, 'register.html', context)
+```
+Fungsi register menggunakan builtin form Django khusus untuk registrasi (UserCreationForm). Untuk validasi input dan penampilan html pada template. Setelah berhasil, akan dilakukan redirect ke halaman login. Akan dikirimkan juga data messages yang mengindikasikan akun berhasil dibuat, (data messages dapat ditampilkan dalam html dengan langsung mereferensi "messages"). Jika request bukan POST, maka form akan dikirimkan ke pengguna sebagai context untuk digunakan builtin "as_table" htmlnya.
+```
+{% extends 'base.html' %}
+
+{% block meta %}
+<title>Register</title>
+{% endblock meta %}
+
+{% block content %}
+
+<div>
+  <h1>Register</h1>
+
+  <form method="POST">
+    {% csrf_token %}
+    <table>
+      {{ form.as_table }}
+      <tr>
+        <td></td>
+        <td><input type="submit" name="submit" value="Daftar" /></td>
+      </tr>
+    </table>
+  </form>
+
+  {% if messages %}
+  <ul>
+    {% for message in messages %}
+    <li>{{ message }}</li>
+    {% endfor %}
+  </ul>
+  {% endif %}
+</div>
+
+{% endblock content %}
+```
+Kode di atas adalah isi dari register.html. Untuk memberikan user cara request data (yakni data akun), diperlukan elemen html form dengan method POST (method ini umumnya digunakan jika pengguna ingin mengirimkan data ke server). Lalu berdasarkan yang dirujuk sebelumnya, diperlukan penjagaan form ini dengan csrf_token agar terjaga dari serangan CSRF. Berikutnya akan digunakan template html yang disediakan form tersebut dengan mengambil atribut "as_table" yang berisi template html khusus untuk registrasi (lengkap dengan validasi input lagi dari sisi client side). Field ini disisipi dalam elemen table, berikutnya akan ditambahkan baris baru yang berisi elemen input dengan tipe [submit](https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/input/submit) (tipe ini secara default berguna untuk melakukan submisi data ke server). Atribut "name" hanya digunakan jika diperlukan lebih dari satu tombol input, lalu atribut Daftar jelas adalah isi text dari tombol tersebut.  Lalu untuk bagian bawah akan secara sederhana cek messages dan display pesan tersebut dalam konteks ini akan menampilkan apakah akun berhasil registrasi atau belum. 
+
+```
+def login_user(request):
+    if request.method == 'POST':
+        form = AuthenticationForm(data=request.POST)
+        if form.is_valid():
+            user = form.get_user()
+            login(request, user)
+            response = HttpResponseRedirect(reverse("main:show_index"))
+            response.set_cookie('last_login', str(datetime.datetime.now()))
+            return response
+    else:
+        form = AuthenticationForm(request)
+    context = {'form': form}
+    return render(request, 'login.html', context)
+```
+Berikutnya view login user, dimana form yang digunakan sekarang adalah AuthenticationForm khusus login (request untuk autentikasi juga merupakan POST, karena pengguna mengirimkan data login yang mereka ingin diautentikasi). Dari request tersebut (pertama dicek apakah data autentikasi valid dan sesuai database dengan is_valid()), Django dapat memberikan class pengguna builtin nya "user" dari request tersebut, lalu agar session tersebut dapat ditabung, akan dilakukan fungsi builtin login dari Django yang menerima request dan pengguna. Kemudian setelah selesai jalan fungsi login(), akan response akan dipasang sebagai redirection kembali ke halamam show_index (fungsi reverse hanya bertujuan merubah nama dari path sebelumnya menjadi url aslinya), agar dapat menampilkan kapan terakhir kali pengguna login akan disimpan session tersebut sebagai cookie (menggunakan library builtin python datetime untuk mengambil waktu sekarang login). Setelah itu akan dilakukan dikembalikan response tersebut.
+
+Jika request bukan merupakan POST, maka pengguna sedang ingin minta html untuk autentikasi, sama seperti form registrasi, form akan dikirim sebagai context untuk diambil builtin html "as_table" nya.
+
+```
+{% extends 'base.html' %}
+
+{% block meta %}
+<title>Login</title>
+{% endblock meta %}
+
+{% block content %}
+<div class="login">
+  <h1>Login</h1>
+
+  <form method="POST" action="">
+    {% csrf_token %}
+    <table>
+      {{ form.as_table }}
+      <tr>
+        <td></td>
+        <td><input class="btn login_btn" type="submit" value="Login" /></td>
+      </tr>
+    </table>
+  </form>
+
+  {% if messages %}
+  <ul>
+    {% for message in messages %}
+    <li>{{ message }}</li>
+    {% endfor %}
+  </ul>
+  {% endif %} Don't have an account yet?
+  <a href="{% url 'main:register' %}">Register Now</a>
+</div>
+
+{% endblock content %}
+```
+
+Di atas adalah kode login.html mirip dengan register.html. Dengan tambahan class btn dan login_btn agar dapat diperindahkan dengan stylesheet .css default Django. Juga berisi tautan register bagi pengguna yang belum register.
+
+
+```
+def logout_user(request):
+    logout(request)
+    return redirect('main:login')
+```
+
+Berikutnya fungsi view logout, yang akan menggunakan builtin fungsi Django logout() dengan tujuan mirip dengan fungsi login() sebelumnya, hanya dalam konteks ini, Django akan menutup session usernya. Lalu akan diredirect kembali ke halaman login.
+
+```
+...
+<a href="{% url 'main:logout' %}">
+  <button>Logout</button>
+</a>
+...
+```
+Pastikan tambahkan juga tombol tersebut pada halaman indeks agar pengguna bisa logout secara intuitif.
+
+```
+...
+path('login/', login_user, name="login"),
+path('register/', register_user, name="register"),
+path('logout/', logout_user, name="logout"),
+```
+Jangan lupa untuk menambahkan URL tersebut agar halaman dapat diakses.
+
+
+## Menghubungkan model Product dengan User.
+Tambahkan field baru bertipe ForeignKey pada model Product
+```
+...
+requester = models.ForeignKey(User, on_delete=models.CASCADE, null=True)
+...
+```
+Field ini akan dinamakan requester sesuai tema program (dimana pengguna hanya akan request pembuatan produk tersebut). ForeignKey berarti bahwa field ini merujuk pada suatu field di tabel model lain (dalam kasus ini merujuk pada model User). Sehingga mengimplementasikan hubungan many to one antara Produk dan User. Keyword argumen "on_delete" mendefinisikan apa yang dilakukan Django pada database jika suatu model User dihapus, dalam kasus ini kita juga menginginkan kunci pada model Product juga dihapus (karena memang sudah tidak valid primary key Usernya). Jangan lupa untuk melakukan migrasi untuk perubahan model.
+
+Kemudian perlu dimodifikasi view pembuatan Product agar juga menyimpan pengguna siapa yang membuatnya.
+```
+def create_product(request):
+    form = ProductForm(request.POST or None)
+    if form.is_valid() and request.method == "POST":
+        product_entry = form.save(commit=False)
+        product_entry.requester = request.user
+        product_entry.save()
+        return redirect('main:show_index')
+
+    context = {'form': form}
+    return render(request, "create_product.html", context)
+```
+Karena ada field yang harus didefinisikan manual oleh server (yakni field User), maka form harus disave dengan commit=False dahulu (ini akan mnabung struktur model tanpa ditulis ke database terlebih dahulu), kemudian akan dipasang field requester berdasarkan akun siapa yang sedang melakukan request tersebut, setelah ini baru dapat dipanggil fungsi save() untuk menulisnya. Setelah itu, harus ditampilkan pada index.html dan product_detail.html agar dapat dilihat siapakah yang membuat request produk tersebut.
+```
+{% if product.requester %}
+    <p>Requester: {{ product.requester.username }}</p>
+{% else %}
+    <p>Requester: Anonymous</p>
+{% endif %}
+```
+
+Cuplikan tersebut hanya perlu saya sisipkan dalam index.html dan product_detail.html, (jika kosong di masukkan placeholder anon). Agar memudahkan pengguna melihat request yang telah dibuatnya, pada index halaman akan ditambahkan query all requests dan my requests.
+```
+def show_index(request):
+    filter_type = request.GET.get("filter", "all")
+    if filter_type == "all":
+        product_list = Product.objects.all()
+    else:
+        product_list = Product.objects.filter(requester=request.user)
+    return render(
+        request,
+        "index.html",
+        {
+            "nama": "Christopher Evan Tanuwidjaja",
+            "kelas": "A",
+            "app_name": "main",
+            "product_list": product_list,
+            "last_login": request.COOKIES.get('last_login', 'Never')
+        }
+    )
+```
+Pertama akan ditambahkan fitur pada views show_index() dimana jika diberi flag "filter", maka product_list yang ditampilkan menyesuaikan permintaan. Untuk mendapatkan pengguna yang sesuai, digunakan saja method filter pada model yang disediakan Django. 
+
+##  Menampilkan detail informasi pengguna yang sedang logged in seperti username dan menerapkan cookies seperti last_login pada halaman utama aplikasi.
+Penerapan cookies dan session sudah dijelaskan pada poin sebelumnya, untuk menampilkan username dan last_login hanya diperlukan query data tersebut dari model User yang diberikan dengan context (khusus model username, Django sudah secara default memiliki context tersebut). 
+```
+...
+<h5>Username: {{ user.username }}</h5>
+<h5>Sesi terakhir login: {{ last_login }}</h5>
+...
+```
+Beberapa fungsi akan menggunakan decorator builtin Django agar beberapa views memerlukan autentikasi jika ingin diakses. Maka akan ditambahkan decorator tersebut pada beberapa views yang penting.
+```
+@login_required(login_url='/login')
+    def show_product(request, id):
+        ...
+
+@login_required(login_url='/login')
+    def create_product(request):
+        ...
+
+@login_required(login_url='/login')
+    def show_index(request):
+        ...
+```
+
+## Membuat dua (2) akun pengguna dengan masing-masing tiga (3) dummy data menggunakan model yang telah dibuat sebelumnya untuk setiap akun di lokal.
+
+Hal ini secara mudah dilakukan dengan menggunakan hubungan model Product dengan User sebelumnya untuk membuat masing - masing model.
+
+![Bukti Pembuatan dummy data pada lokal](User2Product3.png)
+
+
