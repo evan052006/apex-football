@@ -51,11 +51,9 @@ def show_product(request, id):
 def create_product(request):
     form = ProductForm(request.POST or None)
     if form.is_valid() and request.method == "POST":
-        '''
         product_entry = form.save(commit=False)
-        '''
-        form.requester = request.user
-        form.save()
+        product_entry.requester = request.user
+        product_entry.save()
         return redirect('main:show_index')
 
     context = {'form': form}
@@ -76,6 +74,7 @@ def show_index(request):
             "nama": "Christopher Evan Tanuwidjaja",
             "kelas": "A",
             "app_name": "main",
+            "username": request.user.username,
             "product_list": product_list,
             "last_login": request.COOKIES.get('last_login', 'Never')
         }

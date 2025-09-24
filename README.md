@@ -697,6 +697,16 @@ def show_index(request):
 ```
 Pertama akan ditambahkan fitur pada views show_index() dimana jika diberi flag "filter", maka product_list yang ditampilkan menyesuaikan permintaan. Untuk mendapatkan pengguna yang sesuai, digunakan saja method filter pada model yang disediakan Django. 
 
+```
+<a href="?filter=all">
+    <button type="button">All Requests</button>
+</a>
+<a href="?filter=my">
+    <button type="button">My Requests</button>
+</a>
+```
+Lalu akan ditambahkan tombol untuk memudahkan akses flag tersebut pada index.html
+
 ##  Menampilkan detail informasi pengguna yang sedang logged in seperti username dan menerapkan cookies seperti last_login pada halaman utama aplikasi.
 Penerapan cookies dan session sudah dijelaskan pada poin sebelumnya, untuk menampilkan username dan last_login hanya diperlukan query data tersebut dari model User yang diberikan dengan context (khusus model username, Django sudah secara default memiliki context tersebut). 
 ```
