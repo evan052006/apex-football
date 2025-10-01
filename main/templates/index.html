@@ -1,64 +1,110 @@
-{% extends 'base.html' %}
+{% extends "base.html" %}
+{% load static %}
 {% block content %}
-<h1>Apex Football</h1>
-
-<h3>Nama Aplikasi: </h3>
-<p>{{ app_name }}</p> 
-<h3>Nama: </h3>
-<p>{{ nama }}</p> 
-<h3>Kelas: </h3>
-<p>PBP {{ kelas }}</p> 
-
-<a href = {% url 'main:create_product' %}>
-    <button>Add Product</button>
-</a>
-
-<a href="{% url 'main:logout' %}">
-  <button>Logout</button>
-</a>
-
-<h5>Username: {{ user.username }}</h5>
-<h5>Sesi terakhir login: {{ last_login }}</h5>
-
-<a href="?filter=all">
-    <button type="button">All Requests</button>
-</a>
-<a href="?filter=my">
-    <button type="button">My Requests</button>
-</a> 
-
-<hr>
-
-{% if not product_list %}
-<p>Belum ada data produk pada Apex Football</p>
-{% else %}
-
-{% for product in product_list %}
-<div>
-    <h2><a href="{% url 'main:show_product' product.id %}">{{ product.name }}</a></h2>
-    {% if product.requester %}
-        <p>Requester: {{ product.requester.username }}</p>
+    {% include "navbar.html" %}
+    <div class="container-lg my-4 mx-2 mx-lg-auto w-auto p-2 border border-2 rounded d-flex">
+        <a href="?filter=all" class="btn btn-secondary me-2">All Requests</a>
+        <a href="?filter=my" class="btn btn-secondary">My Requests</a>
+    </div>
+    {% if not product_list %}
+        <div class="container d-flex flex-column align-items-center mx-auto">
+            <p>Belum ada data produk pada Apex Football</p>
+            <img src="{% static "image/no_product_found.png" %}" alt="ProductNotFound">
+        </div>
     {% else %}
-        <p>Requester: Anonymous</p>
+        <div class="container-lg d-flex flex-wrap p-3 my-4 mx-2 mx-lg-auto w-auto gap-3">
+            {% for product in product_list %}
+                <div class="card" style="width: 18rem;">
+                    {% if product.thumbnail %}
+                        <img src="{{ product.thumbnail }}"
+                             alt="thumbnail"
+                             width="150"
+                             height="100"
+                             class="card-img-top">
+                    {% else %}
+                        <img src="{% static 'image/no_product_thumbnail.png' %}"
+                             alt="thumbnail"
+                             width="150"
+                             height="100"
+                             class="card-img-top">
+                    {% endif %}
+                    <div class="card-body">
+                        <h3 class="card-title">{{ product.name }}</h3>
+                        <span class="badge bg-primary">{{ product.get_category_display }}</span>
+                        {% if product.is_featured %}<span class="badge bg-warning text-dark">Featured</span>{% endif %}
+                        {% if product.is_verified %}<span class="badge bg-success">Verified</span>{% endif %}
+                        {% if product.requester %}
+                            <p>Requester: {{ product.requester.username }}</p>
+                        {% else %}
+                            <p>Requester: Anonymous</p>
+                        {% endif %}
+                        Price: {{ product.price }}
+                    </p>
+                    <p class="card-text">{{ product.description|truncatewords:25 }}...</p>
+                    <div class="d-flex justify-content-between">
+                        <a class="btn btn-secondary btn-sm"
+                           href="{% url 'main:show_product' product.id %}">Read More</a>
+                        {% if user.is_authenticated and product.requester == user %}
+                            <a class="btn btn-warning btn-sm"
+                               data-bs-toggle="modal"
+                               data-bs-target="#editModal{{ product.id }}">Edit</a>
+                            <a class="btn btn-danger btn-sm"
+                               data-bs-toggle="modal"
+                               data-bs-target="#deleteModal{{ product.id }}">Delete</a>
+                            <div class="modal fade"
+                                 id="editModal{{ product.id }}"
+                                 tabindex="-1"
+                                 aria-labelledby="editModalHeader{{ product.id }}"
+                                 aria-hidden="true">
+                                <div class="modal-dialog">
+                                    <div class="modal-content">
+                                        <div class="modal-header">
+                                            <h1 class="modal-title fs-5" id="editModalHeader{{ product.id }}">Edit Product Request</h1>
+                                            <button type="button"
+                                                    class="btn-close"
+                                                    data-bs-dismiss="modal"
+                                                    aria-label="Close"></button>
+                                        </div>
+                                        <div class="modal-body">Do you want to edit current product request?</div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                            <a type="button"
+                                               href="{% url 'main:edit_product_request' product.id %}"
+                                               class="btn btn-warning">Edit</a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="modal fade"
+                                 id="deleteModal{{ product.id }}"
+                                 tabindex="-1"
+                                 aria-labelledby="deleteModalHeader{{ product.id }}"
+                                 aria-hidden="true">
+                                <div class="modal-dialog">
+                                    <div class="modal-content">
+                                        <div class="modal-header">
+                                            <h1 class="modal-title fs-5" id="deleteModalHeader{{ product.id }}">Delete Product Request</h1>
+                                            <button type="button"
+                                                    class="btn-close"
+                                                    data-bs-dismiss="modal"
+                                                    aria-label="Close"></button>
+                                        </div>
+                                        <div class="modal-body">Do you want to delete current product request?</div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                            <a type="button"
+                                               href="{% url 'main:delete_product_request' product.id %}"
+                                               class="btn btn-danger">Delete</a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            <hr>
+        {% endfor %}
     {% endif %}
-    <b>{{ product.get_category_display }}</b>{% if product.is_featured %} | 
-    <b>Featured</b>{% endif %}{% if product.is_verified %} | 
-    <b>Verified</b>{% endif %} | Price: {{ product.price }}</p>
-
-    {% if product.thumbnail %}
-    <img src="{{ product.thumbnail }}" alt="thumbnail" width="150" height="100">
-    <br />
-    {% endif %}
-
-    <p>{{ product.description|truncatewords:25 }}...</p>
-
-    <p><a href="{% url 'main:show_product' product.id %}"><button>Read More</button></a></p>
 </div>
-
-<hr>
-{% endfor %}
-
-{% endif %}
-
 {% endblock content %}
-

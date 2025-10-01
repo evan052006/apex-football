@@ -1,6 +1,7 @@
-{% extends 'base.html' %}
+{% extends "base.html" %}
+{% load static %}
 {% block content %}
-    <div class="container mt-5">
+<div class="container mt-5">
         <div class="mb-3">
         <a href="{% url 'main:show_index' %}" class="btn btn-outline-secondary">
             <i class="bi bi-arrow-left"></i> Back to Product List
@@ -9,7 +10,7 @@
         <div class="row justify-content-center">
             <div class="col-md-6">
                 <div class="card p-4">
-                    <h1 class="text-center mb-4">Create Product Request</h1>
+                    <h1 class="text-center mb-4">Edit Product Request</h1>
                     <form method="post">
                         {% csrf_token %}
                         {% for field in form %}
@@ -31,4 +32,6 @@
             </div>
         </div>
     </div>
+
+
 {% endblock content %}

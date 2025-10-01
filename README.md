@@ -736,4 +736,82 @@ Hal ini secara mudah dilakukan dengan menggunakan hubungan model Product dengan 
 
 ![Bukti Pembuatan dummy data pada lokal](User2Product3.png)
 
+## Jika terdapat beberapa CSS selector untuk suatu elemen HTML, jelaskan urutan prioritas pengambilan CSS selector tersebut!
 
+Jika beberapa css selector menunjuk pada suatu elemen, maka selector dengan prioritas tertinggi akan menimpa property yang diset selector prioritas yang lebih rendah.
+Berikut tabel terurut dari prioritas tertinggi hingga terendah
+| Selector |	Example |	Description  |
+| --------- | ---------| ----------  |
+| Inline styles |	\<h1 style="color: red;"\>	| Highest priority, will override all other selectors	  |
+| Id selectors |	#navbar	Second highest | Must be unique in an HTTP document |
+| Classes, attribute selectors and pseudo-classes	| .test, [type="text"], :hover	| Selector yang paling sering digunakan untuk styling css, karena sifat tidak perlu unik (Kebalikan dari ID) |
+| Elements and pseudo-elements	| h1, ::before, ::after |	Self Explanatory, akan menyeleksi semua tipe elemen tertentu dalam suatu dokumen
+| Universal selector and :where() |	*, where() | Self Explanatory, akan menyeleksi semua elemen html dalam dokumen |
+
+[Referensi](https://www.w3schools.com/css/css_specificity.asp)
+
+## Mengapa responsive design menjadi konsep yang penting dalam pengembangan aplikasi web? Berikan contoh aplikasi yang sudah dan belum menerapkan responsive design, serta jelaskan mengapa!
+
+Responsive design berguna untuk memastikan design tertampil dengan baik dengan perangkat keras yang berbeda - beda. Dilakukan dengan melakukan desain dengan screen size yang bervariasi, salah satu implementasi responsive design yang dilakukan bootstrap adalah breakpoints, dimana setiap atribut akan berubah tergantung ukuran layar. 
+
+Salah satu kasus dimana responsive design belum diterapkan dengan baik menurut saya adalah situs Scele. Disebabkan karena target platform utama Scele adalah desktop, sehingga halaman utama Scele memiliki banyak sekali elemen. Untuk desktop platform, jumlah elemen banyak ini cukup, namun dalam mobile platform yang mendesain Scele terpaksa menyembunyikan elemen. Hal ini tidak masalah, namun salah satu sidebar seperti Announcements, Events, etc justru diletakkan di paling bawah situs. Menurut saya alasan desain Scele kurang dipedulikan karena kursus Scele sudah dapat ditampilkan di Moodle dengan UI yang jauh lebib mobile friendly. 
+
+Salah satu kasus responsive design yang termasuk baik adalah github. Walaupun github memiliki masalah yang sama dengan Scele, dimana informasi yang ditampilkan terlalu banyak untuk mobile. Github melakukan pembagian situsnya menjadi lebih banyak halaman (seperti Organisation, Projects, Issues, etc). Dimana setiap halaman umumnya tidak memuat lebih dari 100 cm, hal ini memastikan setiap elemen mudah dilihat dalam setiap halaman.
+
+##  Jelaskan perbedaan antara margin, border, dan padding, serta cara untuk mengimplementasikan ketiga hal tersebut!
+Margin adalah jarak antara border suatu objek dari container parentnya. Border adalah garis yang membatasi margin dan padding. Sedangkan padding adalah jarak antara border dengan objek yang ada didalam objek padding tersebut. 
+
+Implementasi ketiga hal dalam bootstrap dapat mudah dilakukan dengan class "m", "p", dan "border". Bootstrap sudah set ukuran default dari 0 hingga 5. Juga terdapat beberapa opsi yang dapat ditambahkan seperti auto yang menyesuaikan tergantung space yang ada, atau x dan y yang sekaligus mengefek vertikal atau horizontal.
+
+##  Jelaskan konsep flex box dan grid layout beserta kegunaannya!
+
+Flexbox dan Grid Layout adalah dua modul penting dalam CSS modern yang digunakan untuk menata (layout) elemen-elemen di halaman web. Flexbox dirancang untuk tata letak satu dimensi (sebaris atau sekolom), memungkinkan elemen-elemen di dalamnya menyesuaikan ukuran dan posisi agar mengisi ruang yang tersedia. Kegunaannya utama adalah mengatur penempatan, perataan, dan distribusi ruang untuk item-item dalam satu baris, seperti elemen navigasi, item di dalam card, atau form input. Sementara itu, Grid Layout (CSS Grid) dirancang untuk tata letak dua dimensi (baris dan kolom secara bersamaan), memungkinkan pembagian halaman menjadi struktur baris dan kolom yang kompleks. Kegunaannya adalah membangun struktur halaman utama (main layout) yang kompleks dan responsif, seperti header, sidebar, dan area konten utama. Keduanya sering digunakan bersamaan: Grid untuk tata letak halaman besar, dan Flexbox untuk mengatur elemen di dalam sel Grid.
+
+## Implementasi fungsi menghapus dan mengedit product
+```
+@login_required(login_url='/login')
+def edit_product_request(request, id):
+    product = get_object_or_404(Product, pk=id)
+    if product.requester != request.user:
+        return HttpResponse(status=401)
+    form = ProductForm(request.POST or None, instance=product)
+    if form.is_valid() and request.method == "POST":
+        form.save()
+        return redirect('main:show_index')
+    return render(
+        request,
+        "edit_product_request.html",
+        {
+            'form': form,
+        }
+    )
+```
+Fungsi mengedit product memiliki isi yang mirip dengan view create_product, hanya saja form yang dibuat menggunakan instansi produk yang sudah ada. Juga saya tambahkan dekorator @login_required dan pengecekan apakah request tersebut benar dibuat oleh pengguna yang bersangkutan.
+
+```
+@login_required(login_url='/login')
+def delete_product_request(request, id):
+    product = get_object_or_404(Product, pk=id)
+    if product.requester != request.user:
+        return HttpResponse(status=401)
+    product.delete()
+    return HttpResponseRedirect(reverse('main:show_index'))
+```
+Fungsi view ini juga sama persis sebelumnya, hanya saja aksinya langsung menghapus produk yang didapatkan
+
+## Kustomisasi halaman login, register, tambah product, edit product, dan detail product semenarik mungkin.
+
+Halaman login dan register dibuat dengan cara mengakses context form pada django untuk membuat elemen html inputnya, lalu menggunakan tambahan class bootstrap untuk menambahkan desainnya. Untuk halaman tambah product, ditambahkan variabel baru pada form dengan menambahkan clss bootstrap pada widget form yang digunakan, sehingga html edit product dan create product identikal. Untuk semua halaman tersebut, tampilan saya masukkan dalam card sehingga terlihat lebih baik. Untuk detail product prinsipnya juga sama dengan sebelumnya, hanya saja tujuannya menampilkan setiap atribut dalam model product.
+
+
+##  Jika pada aplikasi belum ada product yang tersimpan, halaman daftar product akan menampilkan gambar dan pesan bahwa belum ada product yang terdaftar.
+Hal ini dilakukan dengan menambahkan container baru dengan teks yang mendisplay belum ada produk dengan gambar yang diinginkan (diletakkan di direktori static). Agar kedua elemen terlihat stacked on top of each other, aku pakai container Flexbox dengna mengubah arah pada kolom lalu pakai align-items-center dari bootstrap.
+
+## Jika sudah ada product yang tersimpan, halaman daftar product akan menampilkan detail setiap product dengan menggunakan card (tidak boleh sama persis dengan desain pada Tutorial!).
+Hal ini saya lakukan dengan elemen card bootstrap, yang dibagi jadi image, label, serta bodynya. Perbedaan desain dari tutorial aku lakukan dengan menambahkan flag kategori dan verified dibawah gambar agar tidak obstruktif. Saya juga menambahkan tombol Readmore yang akan melakukan redirection ke halaman produk tersebut.
+
+##  Untuk setiap card product, buatlah dua buah button untuk mengedit dan menghapus product pada card tersebut!
+Setelah saya buat buttonnya, aku menambahkan modal (dimana setiap card memiliki modal tersendiri dengan id masing - masing modal yang akan melakukan aksi tersebut). Perhatikan juga tombol tersebut hanya menampil jika user authenticated dan memang sesuai requester product tersebut.
+
+## Buatlah navigation bar (navbar) untuk fitur-fitur pada aplikasi yang responsive terhadap perbedaan ukuran device, khususnya mobile dan desktop.
+Pertama dibuat navbar brand sebelah kiri, lalu tombol - tombol ditengah akan di containernya sendiri dengan diarahkan ketengah, lalu pada bagian kanan terdapat informasi pembuat website (nama, kelas, dan NPM saya) dengan dropdown menu akun user yang untuk sekarang hanya ada opsi logout dengan informasi sesi cookie login terakhir. Navbar tersebut sudah responsive karena elemen lain, kecuali navbar brand ada dalam container navbar collapse, yang akan collapse pada breakpoint tertentu, tombol lainnya akan muncul dengan menu hamburger dengan navbar toggle

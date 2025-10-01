@@ -1,28 +1,49 @@
 {% extends 'base.html' %}
 {% block content %}
-<p>
-    <a href="{% url 'main:show_index' %}">
-        <button>← Back to Product List</button>
-    </a>
-</p>
+<div class="container mt-5">
+    <div class="mb-3">
+        <a href="{% url 'main:show_index' %}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left"></i> Back to Product List
+        </a>
+    </div>
 
-<h1>{{ product.name }}</h1>
-{% if product.requester %}
-    <p>Requester: {{ product.requester.username }}</p>
-{% else %}
-    <p>Requester: Anonymous</p>
-{% endif %}
-
-<p>
-    <b>{{ product.get_category_display }}</b>{% if product.is_featured %} | 
-    <b>Featured</b>{% endif %}{% if product.is_verified %} | 
-    <b>Verified</b>{% endif %} | Price: {{ product.price }}</p>
-
-{% if product.thumbnail %}
-<img src="{{ product.thumbnail }}" alt="Product thumbnail" width="300">
-<br /><br />
-{% endif %}
-
-<p>{{ product.description }}</p>
-
+    <div class="row">
+        <div class="col-lg-8 offset-lg-2">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <div class="row">
+                        {% if product.thumbnail %}
+                        <div class="col-md-4 mb-3 mb-md-0 d-flex justify-content-center align-items-center">
+                            <img src="{{ product.thumbnail }}" class="img-fluid rounded-start" alt="Product thumbnail">
+                        </div>
+                        {% endif %}
+                        <div class="{% if product.thumbnail %}col-md-8{% else %}col-12{% endif %}">
+                            <h1 class="card-title">{{ product.name }}</h1>
+                            <p class="card-subtitle text-muted mb-2">
+                                Requester: {% if product.requester %}
+                                {{ product.requester.username }}
+                                {% else %}
+                                Anonymous
+                                {% endif %}
+                            </p>
+                            <hr>
+                            <p class="card-text">
+                                <span class="badge bg-primary">{{ product.get_category_display }}</span>
+                                {% if product.is_featured %}
+                                <span class="badge bg-warning text-dark">Featured</span>
+                                {% endif %}
+                                {% if product.is_verified %}
+                                <span class="badge bg-success">Verified</span>
+                                {% endif %}
+                            </p>
+                            <p class="card-text fs-4 text-success fw-bold">Price: ${{ product.price }}</p>
+                            <hr>
+                            <p class="card-text">{{ product.description }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 {% endblock content %}

@@ -110,3 +110,32 @@ def login_user(request):
 def logout_user(request):
     logout(request)
     return redirect('main:login')
+
+
+@login_required(login_url='/login')
+def edit_product_request(request, id):
+    product = get_object_or_404(Product, pk=id)
+    if product.requester != request.user:
+        return HttpResponse(status=401)
+    form = ProductForm(request.POST or None, instance=product)
+    if form.is_valid() and request.method == "POST":
+        form.save()
+        return redirect('main:show_index')
+    return render(
+        request,
+        "edit_product_request.html",
+        {
+            'form': form,
+        }
+    )
+
+
+@login_required(login_url='/login')
+def delete_product_request(request, id):
+    product = get_object_or_404(Product, pk=id)
+    if product.requester != request.user:
+        return HttpResponse(status=401)
+    product.delete()
+    return HttpResponseRedirect(reverse('main:show_index'))
+
+
